@@ -1,6 +1,5 @@
-package com.example.urlShortenerServer.loggingContext;
+package com.example.urlShortenerServer.filter;
 
-import jakarta.annotation.Priority;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -12,6 +11,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 import java.util.UUID;
 
+//currently does not do anything
 @Component
 public class LoggingContext extends OncePerRequestFilter {
     @Override

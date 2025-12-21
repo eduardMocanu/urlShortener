@@ -25,7 +25,7 @@ public class UrlService {
         this.urlRepository = repository;
     }
 
-    @Transactional//allows dirty checking
+    @Transactional//allows dirty checking, if I change the returned object after the db query, the db is updated as well
     public String findUrlByCode(String code) throws UrlExpired, UrlNotFound{
         Url url = urlRepository.findByShortUrl(code).orElseThrow(() -> {
             log.warn("The wanted url for the code = {} is not found", code);

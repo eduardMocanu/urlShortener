@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -26,7 +27,7 @@ public class UrlController {
     }
 
     @GetMapping("/r/{code}")
-    public ResponseEntity<?> redirectByCode(@RequestParam String code){
+    public ResponseEntity<?> redirectByCode(@PathVariable String code){
         String url = urlService.findUrlByCode(code);
         log.info("Redirect request for code = {}", code);
         return ResponseEntity.status(HttpStatus.FOUND).location(URI.create(url)).build();

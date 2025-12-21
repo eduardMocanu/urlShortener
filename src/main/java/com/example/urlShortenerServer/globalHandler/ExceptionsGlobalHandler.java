@@ -1,6 +1,5 @@
 package com.example.urlShortenerServer.globalHandler;
 
-import com.example.urlShortenerServer.controller.UrlController;
 import com.example.urlShortenerServer.enums.ApiErrors;
 import com.example.urlShortenerServer.error.ApiError;
 import com.example.urlShortenerServer.exceptions.UrlExpired;
@@ -22,7 +21,7 @@ public class ExceptionsGlobalHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<?> handleException(Exception exception, HttpServletRequest request){
-        log.error("Unexpected exception message = {}, localized = {}, stack trace = {}, on path = {}", exception.getMessage(), exception.getLocalizedMessage(), exception.getStackTrace(), request.getRequestURI());
+        log.error("Unexpected exception message = {}, localized = {}, on path = {}", exception.getMessage(), exception.getLocalizedMessage(), request.getRequestURI());
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(
                         ApiError.builder()
@@ -36,11 +35,27 @@ public class ExceptionsGlobalHandler {
 
     @ExceptionHandler(UrlExpired.class)
     public ResponseEntity<?> handleUrlExpiredException(UrlExpired expired, HttpServletRequest request){
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiError.builder().timeStamp(LocalDateTime.now()).status(HttpStatus.NOT_FOUND).error(ApiErrors.URL_EXPIRED).message("The wanted url is expired").path(request.getRequestURI()));
+        return ResponseEntity.status(HttpStatus.GONE)
+                .body(
+                        ApiError.builder()
+                                .timeStamp(LocalDateTime.now())
+                                .status(HttpStatus.GONE)
+                                .error(ApiErrors.URL_EXPIRED)
+                                .message("The wanted url is expired")
+                                .path(request.getRequestURI())
+                );
     }
 
     @ExceptionHandler(UrlNotFound.class)
     public ResponseEntity<?> handleUrlNotFoundException(UrlNotFound notFound, HttpServletRequest request){
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiError.builder().timeStamp(LocalDateTime.now()).status(HttpStatus.NOT_FOUND).error(ApiErrors.URL_NOT_FOUND).message("The wanted url is not found").path(request.getRequestURI()));
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(
+                        ApiError.builder()
+                                .timeStamp(LocalDateTime.now())
+                                .status(HttpStatus.NOT_FOUND)
+                                .error(ApiErrors.URL_NOT_FOUND)
+                                .message("The wanted url is not found")
+                                .path(request.getRequestURI())
+                );
     }
 }
