@@ -4,7 +4,6 @@ import com.example.urlShortenerServer.enums.UserRole;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.Generated;
 import lombok.NoArgsConstructor;
 
 import java.util.List;
@@ -39,5 +38,5 @@ public class User {
     //this one: @ManyToOne(fetch = FetchType.LAZY, optional = false)
     //    @JoinColumn(name = "userId", nullable = false)
     //    private User user;
-    private List<URL> urls;
+    private List<Url> urls;
 }

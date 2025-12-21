@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class URL {
+public class Url {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -38,4 +38,7 @@ public class URL {
 
     @Column(nullable = false)
     private Long clicksCount;
+
+    @Column(nullable = false)
+    private Boolean active;
 }
