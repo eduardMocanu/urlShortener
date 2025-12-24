@@ -6,13 +6,18 @@ import com.example.urlShortenerServer.exceptions.UrlExpired;
 import com.example.urlShortenerServer.exceptions.UrlNotFound;
 import com.example.urlShortenerServer.repository.UrlRepository;
 import jakarta.transaction.Transactional;
+import org.hibernate.type.TrueFalseConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cglib.core.Local;
 import org.springframework.stereotype.Service;
 
+import java.math.BigInteger;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class UrlService {
@@ -23,6 +28,15 @@ public class UrlService {
     @Autowired
     public void setRepository(UrlRepository repository) {
         this.urlRepository = repository;
+    }
+
+    private String randomCodeGenerator(){
+        UUID uuid = UUID.randomUUID();
+        BigInteger value = BigInteger.valueOf(uuid.getMostSignificantBits())
+                .shiftLeft(64)
+                .or(BigInteger.valueOf(uuid.getLeastSignificantBits()).abs());
+
+        return value.toString(62).substring(0, 8);
     }
 
     @Transactional//allows dirty checking, if I change the returned object after the db query, the db is updated as well
@@ -41,6 +55,39 @@ public class UrlService {
         url.setLastAccessed(LocalDateTime.now());
         url.setClicksCount(url.getClicksCount() + 1);
         return fullUrl;
+    }
+
+    @Transactional
+    public String addShortenedUrl(String urlAddress){
+        String randomCode;
+        do {
+            randomCode = randomCodeGenerator();
+        } while (urlRepository.existsByShortUrl(randomCode));
+        Url url = Url.builder()
+                .url(urlAddress)
+                .shortUrl(randomCode)
+                .createdAt(LocalDateTime.now())
+                .expiration(LocalDateTime.now().plusDays(2))
+                .lastAccessed(LocalDateTime.now())
+                .clicksCount(0L)
+                .active(true)
+                .build();
+        urlRepository.save(url);
+        return randomCode;
+    }
+
+    public List<Url> getAllUrls(){
+        return urlRepository.findAll();
+    }
+
+    public Url getUrlById(long id){
+        Url url = urlRepository.findAllById(id);
+
+        if (url == null){
+            log.warn("The url with the id = {} is not found", id);
+            throw new UrlNotFound("The wanted url is not found");
+        }
+        return url;
     }
 
 }
