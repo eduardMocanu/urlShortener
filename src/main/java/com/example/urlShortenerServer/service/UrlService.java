@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cglib.core.Local;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.math.BigInteger;
@@ -67,6 +68,7 @@ public class UrlService {
                 .url(urlAddress)
                 .shortUrl(randomCode)
                 .createdAt(LocalDateTime.now())
+//                .expiration(LocalDateTime.now().plusMinutes(1))
                 .expiration(LocalDateTime.now().plusDays(2))
                 .lastAccessed(LocalDateTime.now())
                 .clicksCount(0L)
@@ -88,6 +90,20 @@ public class UrlService {
             throw new UrlNotFound("The wanted url is not found");
         }
         return url;
+    }
+
+    @Transactional
+    @Scheduled(fixedDelay = 60000)
+    public void deactivateExpired(){
+        log.info("Cleanup job has started");
+        List<Url> urls = urlRepository.findAllByActive(true);
+        LocalDateTime now = LocalDateTime.now();
+        for (var i:urls){
+            if (i.getActive() && now.isAfter(i.getExpiration())){
+                i.setActive(false);
+                log.info("Deactivated the url with id = {}", i.getId());
+            }
+        }
     }
 
 }
