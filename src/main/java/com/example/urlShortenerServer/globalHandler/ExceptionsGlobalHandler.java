@@ -4,9 +4,11 @@ import com.example.urlShortenerServer.enums.ApiErrors;
 import com.example.urlShortenerServer.error.ApiError;
 import com.example.urlShortenerServer.exceptions.UrlExpired;
 import com.example.urlShortenerServer.exceptions.UrlNotFound;
+import com.example.urlShortenerServer.exceptions.UsernameExistsAlready;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -57,5 +59,24 @@ public class ExceptionsGlobalHandler {
                                 .message("The wanted url is not found")
                                 .path(request.getRequestURI())
                 );
+    }
+
+    @ExceptionHandler(UsernameExistsAlready.class)
+    public ResponseEntity<?> handleUsernameExistsAlready(UsernameExistsAlready usernameExistsAlready, HttpServletRequest request){
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(
+                ApiError.builder()
+                        .timeStamp(LocalDateTime.now())
+                        .status(HttpStatus.CONFLICT)
+                        .error(ApiErrors.USERNAME_EXISTS_ALREADY)
+                        .message("The given username already exists in the db")
+                        .path(request.getRequestURI())
+        );
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<?> handleConstraintViolation(DataIntegrityViolationException ex) {
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body("Tried to input duplicate values on an unique column");
     }
 }
