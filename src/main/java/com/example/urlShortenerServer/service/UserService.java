@@ -1,14 +1,13 @@
 package com.example.urlShortenerServer.service;
 
 
-import com.example.urlShortenerServer.controller.UserController;
 import com.example.urlShortenerServer.domain.User;
 import com.example.urlShortenerServer.dto.UserRequest;
 import com.example.urlShortenerServer.dto.UserResponse;
 import com.example.urlShortenerServer.enums.UserRole;
+import com.example.urlShortenerServer.exceptions.InexistentUser;
 import com.example.urlShortenerServer.exceptions.UsernameExistsAlready;
 import com.example.urlShortenerServer.repository.UserRepository;
-import lombok.extern.java.Log;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,5 +50,26 @@ public class UserService {
         userResponse.setRole(userQuery.getRole());
 
         return userResponse;
+    }
+
+    public UserResponse loginUser(UserRequest userRequest) {
+
+        String username = userRequest.getUsername();
+        String passwordHash = userRequest.getPassword();
+
+        User user = userRepository.findByUsername(username);
+
+        if (user == null){
+            log.warn("The given account credentials are not valid username = {}, passwordHash = {}", username, passwordHash);
+            throw new InexistentUser("The wanted user is not in the db");
+        }
+
+        UserResponse response = new UserResponse();
+        response.setRole(user.getRole());
+        response.setId(user.getId());
+        response.setUsername(user.getUsername());
+
+        return response;
+
     }
 }

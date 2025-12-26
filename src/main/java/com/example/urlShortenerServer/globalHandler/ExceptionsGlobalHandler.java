@@ -2,6 +2,7 @@ package com.example.urlShortenerServer.globalHandler;
 
 import com.example.urlShortenerServer.enums.ApiErrors;
 import com.example.urlShortenerServer.error.ApiError;
+import com.example.urlShortenerServer.exceptions.InexistentUser;
 import com.example.urlShortenerServer.exceptions.UrlExpired;
 import com.example.urlShortenerServer.exceptions.UrlNotFound;
 import com.example.urlShortenerServer.exceptions.UsernameExistsAlready;
@@ -21,20 +22,6 @@ public class ExceptionsGlobalHandler {
     private static final Logger log =
             LoggerFactory.getLogger(ExceptionsGlobalHandler.class);
 
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<?> handleException(Exception exception, HttpServletRequest request){
-        log.error("Unexpected exception message = {}, localized = {}, on path = {}", exception.getMessage(), exception.getLocalizedMessage(), request.getRequestURI());
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(
-                        ApiError.builder()
-                                .timeStamp(LocalDateTime.now())
-                                .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                                .error(ApiErrors.INTERNAL_ERROR)
-                                .message("Internal server error")
-                                .path(request.getRequestURI())
-                );
-    }
-
     @ExceptionHandler(UrlExpired.class)
     public ResponseEntity<?> handleUrlExpiredException(UrlExpired expired, HttpServletRequest request){
         return ResponseEntity.status(HttpStatus.GONE)
@@ -45,6 +32,7 @@ public class ExceptionsGlobalHandler {
                                 .error(ApiErrors.URL_EXPIRED)
                                 .message("The wanted url is expired")
                                 .path(request.getRequestURI())
+                                .build()
                 );
     }
 
@@ -58,6 +46,7 @@ public class ExceptionsGlobalHandler {
                                 .error(ApiErrors.URL_NOT_FOUND)
                                 .message("The wanted url is not found")
                                 .path(request.getRequestURI())
+                                .build()
                 );
     }
 
@@ -70,6 +59,7 @@ public class ExceptionsGlobalHandler {
                         .error(ApiErrors.USERNAME_EXISTS_ALREADY)
                         .message("The given username already exists in the db")
                         .path(request.getRequestURI())
+                        .build()
         );
     }
 
@@ -78,5 +68,33 @@ public class ExceptionsGlobalHandler {
         return ResponseEntity
                 .status(HttpStatus.CONFLICT)
                 .body("Tried to input duplicate values on an unique column");
+    }
+
+    @ExceptionHandler(InexistentUser.class)
+    public ResponseEntity<?> handleInexistentUser(InexistentUser ex, HttpServletRequest request){
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
+                ApiError.builder()
+                        .timeStamp(LocalDateTime.now())
+                        .status(HttpStatus.NOT_FOUND)
+                        .error(ApiErrors.INEXISTENT_USER)
+                        .message("The credentials for the wanted user are not in the db")
+                        .path(request.getRequestURI())
+                        .build()
+        );
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<?> handleException(Exception exception, HttpServletRequest request){
+        log.error("Unexpected exception message = {}, localized = {}, on path = {}", exception.getMessage(), exception.getLocalizedMessage(), request.getRequestURI());
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(
+                        ApiError.builder()
+                                .timeStamp(LocalDateTime.now())
+                                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                                .error(ApiErrors.INTERNAL_ERROR)
+                                .message("Internal server error")
+                                .path(request.getRequestURI())
+                                .build()
+                );
     }
 }

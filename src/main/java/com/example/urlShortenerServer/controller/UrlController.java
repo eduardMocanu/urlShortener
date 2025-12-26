@@ -30,8 +30,8 @@ public class UrlController {
 
     @GetMapping("/r/{code}")
     public ResponseEntity<?> redirectByCode(@PathVariable String code){
-        String url = urlService.findUrlByCode(code);
         log.info("Redirect request for code = {}", code);
+        String url = urlService.findUrlByCode(code);
         return ResponseEntity.status(HttpStatus.FOUND).location(URI.create(url)).build();
     }
 
