@@ -2,10 +2,7 @@ package com.example.urlShortenerServer.globalHandler;
 
 import com.example.urlShortenerServer.enums.ApiErrors;
 import com.example.urlShortenerServer.error.ApiError;
-import com.example.urlShortenerServer.exceptions.InexistentUser;
-import com.example.urlShortenerServer.exceptions.UrlExpired;
-import com.example.urlShortenerServer.exceptions.UrlNotFound;
-import com.example.urlShortenerServer.exceptions.UsernameExistsAlready;
+import com.example.urlShortenerServer.exceptions.*;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -78,6 +75,19 @@ public class ExceptionsGlobalHandler {
                         .status(HttpStatus.NOT_FOUND)
                         .error(ApiErrors.INEXISTENT_USER)
                         .message("The credentials for the wanted user are not in the db")
+                        .path(request.getRequestURI())
+                        .build()
+        );
+    }
+
+    @ExceptionHandler(InvalidUrl.class)
+    public ResponseEntity<?> handleInvalidUrl(InvalidUrl ex, HttpServletRequest request){
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+                ApiError.builder()
+                        .timeStamp(LocalDateTime.now())
+                        .status(HttpStatus.BAD_REQUEST)
+                        .error(ApiErrors.INVALID_URL)
+                        .message("The given url is invalid")
                         .path(request.getRequestURI())
                         .build()
         );

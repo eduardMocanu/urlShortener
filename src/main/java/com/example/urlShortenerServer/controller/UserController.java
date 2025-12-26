@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -17,8 +18,6 @@ import org.springframework.web.bind.annotation.RestController;
 public class UserController {
     private static final Logger log =
             LoggerFactory.getLogger(UserController.class);
-
-    private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder(12);
 
     private UserService userService;
     @Autowired
@@ -31,7 +30,6 @@ public class UserController {
         log.info("Registration for username = {} and password = {} has been requested", userRequest.getUsername(), userRequest.getPassword());
 
         userRequest.setUsername(userRequest.getUsername().toLowerCase());
-        userRequest.setPassword(encoder.encode(userRequest.getPassword()));
 
         UserResponse userResponse = userService.registerUser(userRequest);
         return ResponseEntity.status(HttpStatus.CREATED).body(userResponse);
@@ -43,9 +41,10 @@ public class UserController {
         log.info("Login for username = {} and password = {} has been requested", userRequest.getUsername(), userRequest.getPassword());
 
         userRequest.setUsername(userRequest.getUsername().toLowerCase());
-        userRequest.setPassword(encoder.encode(userRequest.getPassword()));
 
         UserResponse userResponse = userService.loginUser(userRequest);
         return ResponseEntity.status(HttpStatus.OK).body(userResponse);
     }
+
+//    @GetMapping("/account")
 }

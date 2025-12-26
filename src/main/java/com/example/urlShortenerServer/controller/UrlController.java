@@ -44,9 +44,7 @@ public class UrlController {
             URI uri = new URI(fullUrl);
 
             if (uri.getScheme() == null || uri.getHost() == null) {
-                return ResponseEntity
-                        .status(HttpStatus.BAD_REQUEST)
-                        .body("Invalid URL");
+                throw new InvalidUrl("The given url is invalid");
             }
 
             String code = urlService.addShortenedUrl(fullUrl);
@@ -56,9 +54,7 @@ public class UrlController {
                     .body(urlAddedResponse);
 
         } catch (Exception e) {
-            return ResponseEntity
-                    .status(HttpStatus.BAD_REQUEST)
-                    .body("Invalid URL");
+            throw new InvalidUrl("The given url is invalid");
         }
     }
 
@@ -79,7 +75,5 @@ public class UrlController {
         Url url = urlService.getUrlById(id);
 
         return ResponseEntity.status(HttpStatus.OK).body(url);
-
-
     }
 }

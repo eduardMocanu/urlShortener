@@ -11,6 +11,7 @@ import com.example.urlShortenerServer.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -26,11 +27,18 @@ public class UserService {
         this.userRepository = userRepository;
     }
 
+    private BCryptPasswordEncoder encoder;
+    @Autowired
+    public void setEncoder(BCryptPasswordEncoder encoder) {
+        this.encoder = encoder;
+    }
+
+
 
     public UserResponse registerUser(UserRequest userRequest){
 
         String username = userRequest.getUsername();
-        String passwordHash = userRequest.getPassword();
+        String passwordHash = encoder.encode(userRequest.getPassword());
 
         List<User> users = userRepository.findAllByUsername(username);
         if (!users.isEmpty()){
@@ -55,12 +63,12 @@ public class UserService {
     public UserResponse loginUser(UserRequest userRequest) {
 
         String username = userRequest.getUsername();
-        String passwordHash = userRequest.getPassword();
+        String password = userRequest.getPassword();
 
         User user = userRepository.findByUsername(username);
 
-        if (user == null){
-            log.warn("The given account credentials are not valid username = {}, passwordHash = {}", username, passwordHash);
+        if (user == null || !encoder.matches(password, user.getPassword())){
+            log.warn("The given account credentials are not valid username = {}, password = {}", username, password);
             throw new InexistentUser("The wanted user is not in the db");
         }
 
