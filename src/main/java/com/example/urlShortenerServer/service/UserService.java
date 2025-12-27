@@ -8,6 +8,7 @@ import com.example.urlShortenerServer.enums.UserRole;
 import com.example.urlShortenerServer.exceptions.InexistentUser;
 import com.example.urlShortenerServer.exceptions.UsernameExistsAlready;
 import com.example.urlShortenerServer.repository.UserRepository;
+import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +16,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class UserService {
@@ -27,11 +29,7 @@ public class UserService {
         this.userRepository = userRepository;
     }
 
-    private BCryptPasswordEncoder encoder;
-    @Autowired
-    public void setEncoder(BCryptPasswordEncoder encoder) {
-        this.encoder = encoder;
-    }
+    BCryptPasswordEncoder encoder = new BCryptPasswordEncoder(12);
 
 
 
@@ -60,24 +58,39 @@ public class UserService {
         return userResponse;
     }
 
-    public UserResponse loginUser(UserRequest userRequest) {
-
-        String username = userRequest.getUsername();
-        String password = userRequest.getPassword();
-
-        User user = userRepository.findByUsername(username);
-
-        if (user == null || !encoder.matches(password, user.getPassword())){
-            log.warn("The given account credentials are not valid username = {}, password = {}", username, password);
-            throw new InexistentUser("The wanted user is not in the db");
+//    public UserResponse loginUser(UserRequest userRequest) {
+//
+//        String username = userRequest.getUsername();
+//        String password = userRequest.getPassword();
+//
+//        User user = userRepository.findByUsername(username);
+//
+//        if (user == null || !encoder.matches(password, user.getPassword())){
+//            log.warn("The given account credentials are not valid username = {}, password = {}", username, password);
+//            throw new InexistentUser("The wanted user is not in the db");
+//        }
+//
+//        UserResponse response = new UserResponse();
+//        response.setRole(user.getRole());
+//        response.setId(user.getId());
+//        response.setUsername(user.getUsername());
+//
+//        return response;
+//
+//    }
+    @Transactional
+    public User findOrCreateOAuthGoogle(Map<String, Object> attributes){
+        String authId = (String) attributes.get("sub");
+        User user = userRepository.findByAuthId(authId);
+        if (user == null){
+            log.warn("The user is being created because it doesn't exist");
+            user = new User();
+            user.setRole(UserRole.USER);
+            user.setAuthId(authId);
+            user.setAuthProvider("GOOGLE");
+            user.setUsername((String) attributes.get("name"));
+            userRepository.save(user);
         }
-
-        UserResponse response = new UserResponse();
-        response.setRole(user.getRole());
-        response.setId(user.getId());
-        response.setUsername(user.getUsername());
-
-        return response;
-
+        return user;
     }
 }

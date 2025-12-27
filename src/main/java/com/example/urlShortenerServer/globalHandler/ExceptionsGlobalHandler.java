@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -67,7 +68,20 @@ public class ExceptionsGlobalHandler {
                 .body("Tried to input duplicate values on an unique column");
     }
 
-    @ExceptionHandler(InexistentUser.class)
+    @ExceptionHandler(exception = UsernameNotFoundException.class)
+    public ResponseEntity<?> handleUsernameNotFund(InexistentUser ex, HttpServletRequest request){
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
+                ApiError.builder()
+                        .timeStamp(LocalDateTime.now())
+                        .status(HttpStatus.NOT_FOUND)
+                        .error(ApiErrors.INEXISTENT_USER)
+                        .message("The credentials for the wanted user are not in the db")
+                        .path(request.getRequestURI())
+                        .build()
+        );
+    }
+
+    @ExceptionHandler(exception = InexistentUser.class)
     public ResponseEntity<?> handleInexistentUser(InexistentUser ex, HttpServletRequest request){
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
                 ApiError.builder()

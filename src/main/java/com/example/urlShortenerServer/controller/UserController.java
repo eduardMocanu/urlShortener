@@ -29,22 +29,22 @@ public class UserController {
     public ResponseEntity<?> registerUser(@RequestBody UserRequest userRequest){
         log.info("Registration for username = {} and password = {} has been requested", userRequest.getUsername(), userRequest.getPassword());
 
-        userRequest.setUsername(userRequest.getUsername().toLowerCase());
+        userRequest.setUsername(userRequest.getUsername().toLowerCase().strip());
 
         UserResponse userResponse = userService.registerUser(userRequest);
         return ResponseEntity.status(HttpStatus.CREATED).body(userResponse);
     }
 
 
-    @PostMapping("/login")
-    public ResponseEntity<?> loginUser(@RequestBody UserRequest userRequest){
-        log.info("Login for username = {} and password = {} has been requested", userRequest.getUsername(), userRequest.getPassword());
-
-        userRequest.setUsername(userRequest.getUsername().toLowerCase());
-
-        UserResponse userResponse = userService.loginUser(userRequest);
-        return ResponseEntity.status(HttpStatus.OK).body(userResponse);
-    }
+//    @PostMapping("/login")
+//    public ResponseEntity<?> loginUser(@RequestBody UserRequest userRequest){
+//        log.info("Login for username = {} and password = {} has been requested", userRequest.getUsername(), userRequest.getPassword());
+//
+//        userRequest.setUsername(userRequest.getUsername().toLowerCase().strip());
+//
+//        UserResponse userResponse = userService.loginUser(userRequest);
+//        return ResponseEntity.status(HttpStatus.OK).body(userResponse);
+//    }
 
 //    @GetMapping("/account")
 }
