@@ -1,6 +1,7 @@
 package com.example.urlShortenerServer.service;
 
 import com.example.urlShortenerServer.enums.UserRole;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
@@ -19,8 +20,8 @@ import io.jsonwebtoken.security.Keys;
 @Service
 public class JwtService {
 
-
-    private static final String secretKey = "dghryfunbojfn738URH3GT48FJNHVJSHDUFBOE7p8fhbNuHOAWI"; //hardcoded, not recommended
+    @Value("${jwt.secret}")
+    private String secretKey; //hardcoded, not recommended
 
     public String generateToken(String username){
 
