@@ -33,10 +33,10 @@ public class User {
     @Column(nullable = false)
     private UserRole role;
 
-//    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
-//    //mapped by "user" because "user" is the name of the field that has the relation to the users table in the urls table/class
-//    //this one: @ManyToOne(fetch = FetchType.LAZY, optional = false)
-//    //    @JoinColumn(name = "userId", nullable = false)
-//    //    private User user;
-//    private List<Url> urls;
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
+    //mapped by "user" because "user" is the name of the field that has the relation to the users table in the urls table/class
+    //this one: @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    //    @JoinColumn(name = "userId", nullable = false)
+    //    private User user;
+    private List<Url> urls;
 }

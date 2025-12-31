@@ -1,6 +1,7 @@
 package com.example.urlShortenerServer.service;
 
 
+import com.example.urlShortenerServer.domain.Url;
 import com.example.urlShortenerServer.domain.User;
 import com.example.urlShortenerServer.dto.UserRequest;
 import com.example.urlShortenerServer.dto.UserResponse;
@@ -28,6 +29,9 @@ public class UserService {
     public void setUserRepository(UserRepository userRepository) {
         this.userRepository = userRepository;
     }
+
+    @Autowired
+    private UrlService urlService;
 
     BCryptPasswordEncoder encoder = new BCryptPasswordEncoder(12);
 
@@ -58,26 +62,6 @@ public class UserService {
         return userResponse;
     }
 
-//    public UserResponse loginUser(UserRequest userRequest) {
-//
-//        String username = userRequest.getUsername();
-//        String password = userRequest.getPassword();
-//
-//        User user = userRepository.findByUsername(username);
-//
-//        if (user == null || !encoder.matches(password, user.getPassword())){
-//            log.warn("The given account credentials are not valid username = {}, password = {}", username, password);
-//            throw new InexistentUser("The wanted user is not in the db");
-//        }
-//
-//        UserResponse response = new UserResponse();
-//        response.setRole(user.getRole());
-//        response.setId(user.getId());
-//        response.setUsername(user.getUsername());
-//
-//        return response;
-//
-//    }
     @Transactional
     public User findOrCreateOAuthGoogle(Map<String, Object> attributes){
         String authId = (String) attributes.get("sub");
@@ -92,5 +76,16 @@ public class UserService {
             userRepository.save(user);
         }
         return user;
+    }
+
+    public List<Url> getAllUrlsOfUser(String username){
+
+        Long userId = userRepository.findByUsername(username).getId();
+
+        return urlService.getUrlByUserId(userId);
+    }
+
+    public User getUserByUsername(String username){
+        return userRepository.findByUsername(username);
     }
 }

@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigInteger;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -105,5 +106,11 @@ public class UrlService {
             }
         }
     }
+
+    public List<Url> getUrlByUserId(long userId){
+        return urlRepository.findAllByUser_Id(userId);
+    }
+
+
 
 }

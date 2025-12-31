@@ -1,18 +1,29 @@
 package com.example.urlShortenerServer.controller;
 
+import com.example.urlShortenerServer.domain.Url;
+import com.example.urlShortenerServer.domain.User;
 import com.example.urlShortenerServer.dto.UserRequest;
 import com.example.urlShortenerServer.dto.UserResponse;
+import com.example.urlShortenerServer.service.JwtService;
 import com.example.urlShortenerServer.service.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
+import java.util.Map;
 
 @RestController
 public class UserController {
@@ -20,9 +31,18 @@ public class UserController {
             LoggerFactory.getLogger(UserController.class);
 
     private UserService userService;
+    private AuthenticationManager authenticationManager;
+    @Autowired
+    private JwtService jwtService;
+
     @Autowired
     public void setUserService(UserService userService) {
         this.userService = userService;
+    }
+
+    @Autowired
+    public void setAuthenticationManager(AuthenticationManager authenticationManager) {
+        this.authenticationManager = authenticationManager;
     }
 
     @PostMapping("/register")
@@ -36,15 +56,39 @@ public class UserController {
     }
 
 
-//    @PostMapping("/login")
-//    public ResponseEntity<?> loginUser(@RequestBody UserRequest userRequest){
-//        log.info("Login for username = {} and password = {} has been requested", userRequest.getUsername(), userRequest.getPassword());
-//
-//        userRequest.setUsername(userRequest.getUsername().toLowerCase().strip());
-//
-//        UserResponse userResponse = userService.loginUser(userRequest);
-//        return ResponseEntity.status(HttpStatus.OK).body(userResponse);
-//    }
+    @PostMapping("/login")
+    public ResponseEntity<?> loginUser(@RequestBody UserRequest userRequest){
+        log.info("Login for username = {} and password = {} has been requested", userRequest.getUsername(), userRequest.getPassword());
 
-//    @GetMapping("/account")
+        authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        userRequest.getUsername(), userRequest.getPassword()
+                )
+        );
+        String token = jwtService.generateToken(userRequest.getUsername());
+        return ResponseEntity.status(HttpStatus.OK).body(Map.of("token", token));
+    }
+
+    @PostMapping("/oauth/success")
+    public ResponseEntity<?> loginOauth(Authentication authentication){
+        log.info("Login using oauth has been initialized");
+
+        OAuth2User user = (OAuth2User) authentication.getPrincipal();
+        String username = user.getAttribute("name");
+        String token = jwtService.generateToken(username);
+
+        return ResponseEntity.status(HttpStatus.OK).body(Map.of("token", token));
+    }
+
+
+    @GetMapping("/account")
+    public ResponseEntity<?> getAccount(Authentication authentication){
+
+        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+        List<Url> urls = userService.getAllUrlsOfUser(userDetails.getUsername());
+        return ResponseEntity.status(HttpStatus.OK).body(Map.of(
+                "urls", urls,
+                "username", userDetails.getUsername()
+        ));
+    }
 }
