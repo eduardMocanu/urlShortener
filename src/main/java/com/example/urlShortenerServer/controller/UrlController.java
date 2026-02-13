@@ -17,6 +17,7 @@ import java.net.URI;
 import java.util.List;
 
 @RestController
+@CrossOrigin(origins = "http://localhost:5173")
 public class UrlController {
 
     private static final Logger log =
@@ -35,17 +36,12 @@ public class UrlController {
         return ResponseEntity.status(HttpStatus.FOUND).location(URI.create(url)).build();
     }
 
-    @PostMapping("/urls")
+    @PostMapping("/shorten")
     public ResponseEntity<?> shortenUrl(@RequestBody UrlRequest request) {
         log.info("Url shortening requested for url = {}", request.getUrlAddress());
 
         try {
-            String fullUrl = "https://" + request.getUrlAddress();
-            URI uri = new URI(fullUrl);
-
-            if (uri.getScheme() == null || uri.getHost() == null) {
-                throw new InvalidUrl("The given url is invalid");
-            }
+            String fullUrl = request.getUrlAddress();
 
             String code = urlService.addShortenedUrl(fullUrl);
             UrlAddedResponse urlAddedResponse = UrlAddedResponse.builder().code(code).fullShortUrl("http://localhost:8080/r/" + code).build();
@@ -54,6 +50,7 @@ public class UrlController {
                     .body(urlAddedResponse);
 
         } catch (Exception e) {
+            System.out.println(e.getMessage());
             throw new InvalidUrl("The given url is invalid");
         }
     }

@@ -1,5 +1,6 @@
 package com.example.urlShortenerServer.domain;
 
+import lombok.Getter;
 import org.jspecify.annotations.Nullable;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -12,6 +13,7 @@ import java.util.Map;
 
 public class UserPrincipal implements UserDetails, OAuth2User {
 
+    @Getter
     private User user;
     private Map<String, Object> attributes;
 

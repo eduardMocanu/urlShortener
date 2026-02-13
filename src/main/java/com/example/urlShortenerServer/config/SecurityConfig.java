@@ -40,15 +40,16 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http){
         http.csrf(customizer -> customizer.disable());
-        http.authorizeHttpRequests(customizer -> customizer.requestMatchers("/register", "/login", "/oauth/**").permitAll().anyRequest().authenticated());
+        http.cors(Customizer.withDefaults());
+        http.authorizeHttpRequests(customizer -> customizer.requestMatchers("/register", "/login", "/oauth/**", "/r/*").permitAll().anyRequest().authenticated());
         http.httpBasic(Customizer.withDefaults());
         http.oauth2Login(oauth -> oauth
                 .userInfoEndpoint(userInfo ->
                         userInfo.userService(myOAuth2UserService)
                 )
+                .defaultSuccessUrl("/oauth/success", true)
         );
-        http.oauth2Login(oauth -> oauth.defaultSuccessUrl("/oauth/success"));
-        http.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+        http.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED));
         http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }

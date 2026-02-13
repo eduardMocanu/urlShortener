@@ -17,15 +17,13 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.oauth2.core.user.OAuth2User;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
 
 @RestController
+@CrossOrigin(origins = "http://localhost:5173")
 public class UserController {
     private static final Logger log =
             LoggerFactory.getLogger(UserController.class);
@@ -69,21 +67,21 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.OK).body(Map.of("token", token));
     }
 
-    @PostMapping("/oauth/success")
+    @GetMapping("/oauth/success")
     public ResponseEntity<?> loginOauth(Authentication authentication){
         log.info("Login using oauth has been initialized");
 
         OAuth2User user = (OAuth2User) authentication.getPrincipal();
-        String username = user.getAttribute("name");
-        String token = jwtService.generateToken(username);
-
+        String email = user.getAttribute("email");
+        String token = jwtService.generateToken(email);
+        //TO DO: redirect to the frontend page
         return ResponseEntity.status(HttpStatus.OK).body(Map.of("token", token));
     }
 
 
     @GetMapping("/account")
     public ResponseEntity<?> getAccount(Authentication authentication){
-
+        log.info("The details for an account have been requested");
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
         List<Url> urls = userService.getAllUrlsOfUser(userDetails.getUsername());
         return ResponseEntity.status(HttpStatus.OK).body(Map.of(

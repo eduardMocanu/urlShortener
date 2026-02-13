@@ -2,9 +2,13 @@ package com.example.urlShortenerServer.service;
 
 import com.example.urlShortenerServer.controller.UrlController;
 import com.example.urlShortenerServer.domain.Url;
+import com.example.urlShortenerServer.domain.User;
+import com.example.urlShortenerServer.domain.UserPrincipal;
+import com.example.urlShortenerServer.exceptions.InexistentUser;
 import com.example.urlShortenerServer.exceptions.UrlExpired;
 import com.example.urlShortenerServer.exceptions.UrlNotFound;
 import com.example.urlShortenerServer.repository.UrlRepository;
+import com.example.urlShortenerServer.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import org.hibernate.type.TrueFalseConverter;
 import org.slf4j.Logger;
@@ -12,8 +16,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cglib.core.Local;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import javax.naming.Context;
 import java.math.BigInteger;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -27,18 +35,23 @@ public class UrlService {
             LoggerFactory.getLogger(UrlService.class);
 
     private UrlRepository urlRepository;
+    private UserRepository userRepository;
     @Autowired
     public void setRepository(UrlRepository repository) {
         this.urlRepository = repository;
     }
+    @Autowired
+    public void setUserRepository(UserRepository repository){
+        this.userRepository = repository;
+    }
+
 
     private String randomCodeGenerator(){
         UUID uuid = UUID.randomUUID();
         BigInteger value = BigInteger.valueOf(uuid.getMostSignificantBits())
                 .shiftLeft(64)
                 .or(BigInteger.valueOf(uuid.getLeastSignificantBits()).abs());
-
-        return value.toString(62).substring(0, 8);
+        return value.abs().toString(62).substring(0, 8);
     }
 
     @Transactional//allows dirty checking, if I change the returned object after the db query, the db is updated as well
@@ -65,6 +78,15 @@ public class UrlService {
         do {
             randomCode = randomCodeGenerator();
         } while (urlRepository.existsByShortUrl(randomCode));
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
+        if (auth == null || !auth.isAuthenticated() || !(auth.getPrincipal() instanceof UserPrincipal principal)) {
+            throw new InexistentUser("The wanted user is not logged in");
+        }
+
+        User user = principal.getUser();
+
         Url url = Url.builder()
                 .url(urlAddress)
                 .shortUrl(randomCode)
@@ -74,6 +96,7 @@ public class UrlService {
                 .lastAccessed(LocalDateTime.now())
                 .clicksCount(0L)
                 .active(true)
+                .user(user)
                 .build();
         urlRepository.save(url);
         return randomCode;
