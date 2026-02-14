@@ -2,8 +2,12 @@ package com.example.urlShortenerServer.controller;
 
 import com.example.urlShortenerServer.domain.Url;
 import com.example.urlShortenerServer.domain.User;
+import com.example.urlShortenerServer.domain.UserPrincipal;
+import com.example.urlShortenerServer.dto.UrlDto;
+
 import com.example.urlShortenerServer.dto.UserRequest;
 import com.example.urlShortenerServer.dto.UserResponse;
+import com.example.urlShortenerServer.exceptions.InexistentUser;
 import com.example.urlShortenerServer.service.JwtService;
 import com.example.urlShortenerServer.service.UserService;
 import org.slf4j.Logger;
@@ -72,6 +76,9 @@ public class UserController {
         log.info("Login using oauth has been initialized");
 
         OAuth2User user = (OAuth2User) authentication.getPrincipal();
+        if (user == null){
+            throw new InexistentUser("The wanted user is not logged in");
+        }
         String email = user.getAttribute("email");
         String token = jwtService.generateToken(email);
         //TO DO: redirect to the frontend page
@@ -82,11 +89,12 @@ public class UserController {
     @GetMapping("/account")
     public ResponseEntity<?> getAccount(Authentication authentication){
         log.info("The details for an account have been requested");
-        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-        List<Url> urls = userService.getAllUrlsOfUser(userDetails.getUsername());
-        return ResponseEntity.status(HttpStatus.OK).body(Map.of(
-                "urls", urls,
-                "username", userDetails.getUsername()
-        ));
+        UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
+        if (userPrincipal == null){
+            throw new InexistentUser("The wanted user is not logged in");
+        }
+        Long userId = userPrincipal.getUser().getId();
+        List<UrlDto> urlsDto = userService.getAllUrlsOfUser(userId);
+        return ResponseEntity.ok(urlsDto);
     }
 }

@@ -19,5 +19,5 @@ public interface UrlRepository extends JpaRepository<Url, Long> {
 
     List<Url> findAllByUser_Id(Long userId);
 
-    Long user(User user);
+
 }

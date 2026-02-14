@@ -3,6 +3,7 @@ package com.example.urlShortenerServer.service;
 
 import com.example.urlShortenerServer.domain.Url;
 import com.example.urlShortenerServer.domain.User;
+import com.example.urlShortenerServer.dto.UrlDto;
 import com.example.urlShortenerServer.dto.UserRequest;
 import com.example.urlShortenerServer.dto.UserResponse;
 import com.example.urlShortenerServer.enums.UserRole;
@@ -78,11 +79,23 @@ public class UserService {
         return user;
     }
 
-    public List<Url> getAllUrlsOfUser(String username){
+    public List<UrlDto> getAllUrlsOfUser(Long userId){
 
-        Long userId = userRepository.findByUsername(username).getId();
 
-        return urlService.getUrlByUserId(userId);
+        List<Url> urls = urlService.getUrlByUserId(userId);
+        List<UrlDto> urlDtos = urls.stream()
+                .map(u -> new UrlDto(
+                        u.getId(),
+                        u.getUrl(),
+                        u.getShortUrl(),
+                        u.getCreatedAt(),
+                        u.getExpiration(),
+                        u.getLastAccessed(),
+                        u.getClicksCount(),
+                        u.getActive()
+                ))
+                .toList();
+        return urlDtos;
     }
 
     public User getUserByUsername(String username){
