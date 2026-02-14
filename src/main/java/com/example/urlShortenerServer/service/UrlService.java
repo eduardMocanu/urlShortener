@@ -5,6 +5,7 @@ import com.example.urlShortenerServer.domain.Url;
 import com.example.urlShortenerServer.domain.User;
 import com.example.urlShortenerServer.domain.UserPrincipal;
 import com.example.urlShortenerServer.exceptions.InexistentUser;
+import com.example.urlShortenerServer.exceptions.Unauthorized;
 import com.example.urlShortenerServer.exceptions.UrlExpired;
 import com.example.urlShortenerServer.exceptions.UrlNotFound;
 import com.example.urlShortenerServer.repository.UrlRepository;
@@ -24,10 +25,7 @@ import org.springframework.stereotype.Service;
 import javax.naming.Context;
 import java.math.BigInteger;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 public class UrlService {
@@ -106,14 +104,15 @@ public class UrlService {
         return urlRepository.findAll();
     }
 
-    public Url getUrlById(long id){
-        Url url = urlRepository.findAllById(id);
+    public Url getUrlById(long id, User user){
+        Optional<Url> url = urlRepository.findById(id);
+        Url exactUrl = url.orElseThrow(() -> new UrlNotFound("The wanted url is not found"));
 
-        if (url == null){
-            log.warn("The url with the id = {} is not found", id);
-            throw new UrlNotFound("The wanted url is not found");
+        if (!Objects.equals(exactUrl.getUser().getId(), user.getId())){
+            throw new Unauthorized("You are not authorized to do this");
         }
-        return url;
+
+        return exactUrl;
     }
 
     @Transactional

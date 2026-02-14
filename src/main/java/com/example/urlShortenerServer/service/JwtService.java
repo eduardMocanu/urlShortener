@@ -1,6 +1,11 @@
 package com.example.urlShortenerServer.service;
 
-import com.example.urlShortenerServer.enums.UserRole;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.io.Decoders;
+import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
@@ -11,38 +16,55 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
-import io.jsonwebtoken.io.Decoders;
-import io.jsonwebtoken.security.Keys;
-
 @Service
 public class JwtService {
 
     @Value("${jwt.secret}")
-    private String secretKey; //hardcoded, not recommended
+    private String secretKey;
 
-    public String generateToken(String username){
-
+    public String generateToken(String username) {
         Map<String, Object> claims = new HashMap<>();
 
         return Jwts.builder()
                 .setClaims(claims)
                 .setSubject(username)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60))
+                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60)) // 1h
                 .signWith(getKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
 
-    public Key getKey(){
+    private Key getKey() {
         byte[] keyBytes = Decoders.BASE64.decode(secretKey);
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
+    // -------------------------
+    // SAFE methods (no throws)
+    // -------------------------
+
+    public String extractUsernameSafe(String token) {
+        try {
+            return extractClaim(token, Claims::getSubject);
+        } catch (JwtException | IllegalArgumentException e) {
+            return null;
+        }
+    }
+
+    public boolean isTokenValid(String token, UserDetails userDetails) {
+        try {
+            final String username = extractUsername(token);
+            return username.equals(userDetails.getUsername()) && !isTokenExpired(token);
+        } catch (JwtException | IllegalArgumentException e) {
+            return false;
+        }
+    }
+
+    // -------------------------
+    // Normal methods (may throw)
+    // -------------------------
+
     public String extractUsername(String token) {
-        // extract the username from jwt token
         return extractClaim(token, Claims::getSubject);
     }
 
@@ -57,11 +79,6 @@ public class JwtService {
                 .build()
                 .parseClaimsJws(token)
                 .getBody();
-    }
-
-    public boolean validateToken(String token, UserDetails userDetails) {
-        final String userName = extractUsername(token);
-        return (userName.equals(userDetails.getUsername()) && !isTokenExpired(token));
     }
 
     private boolean isTokenExpired(String token) {

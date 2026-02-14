@@ -61,6 +61,19 @@ public class ExceptionsGlobalHandler {
         );
     }
 
+    @ExceptionHandler(Unauthorized.class)
+    public ResponseEntity<?> handleUnauthorized(Unauthorized unauthorized, HttpServletRequest request){
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(
+                ApiError.builder()
+                        .timeStamp(LocalDateTime.now())
+                        .status(HttpStatus.UNAUTHORIZED)
+                        .error(ApiErrors.UNAUTHORIZED)
+                        .message("You are not authorized to do this")
+                        .path(request.getRequestURI())
+                        .build()
+        );
+    }
+
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<?> handleConstraintViolation(DataIntegrityViolationException ex) {
         return ResponseEntity

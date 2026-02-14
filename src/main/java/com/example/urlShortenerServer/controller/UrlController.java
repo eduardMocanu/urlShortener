@@ -2,15 +2,20 @@ package com.example.urlShortenerServer.controller;
 
 
 import com.example.urlShortenerServer.domain.Url;
+import com.example.urlShortenerServer.domain.UserPrincipal;
 import com.example.urlShortenerServer.dto.UrlAddedResponse;
 import com.example.urlShortenerServer.dto.UrlRequest;
+import com.example.urlShortenerServer.enums.UserRole;
+import com.example.urlShortenerServer.exceptions.InexistentUser;
 import com.example.urlShortenerServer.exceptions.InvalidUrl;
+import com.example.urlShortenerServer.exceptions.Unauthorized;
 import com.example.urlShortenerServer.service.UrlService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
@@ -56,21 +61,47 @@ public class UrlController {
     }
 
     @GetMapping("/urls")
-    public ResponseEntity<?> getAllUrls(){
-
+    public ResponseEntity<?> getAllUrls(Authentication authentication){
         log.info("Retreival for all urls has been requested");
 
+        UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
+        if (userPrincipal == null){
+            throw new InexistentUser("You are not logged in");
+        }
+        if (userPrincipal.getUser().getRole() != UserRole.ADMIN){
+            throw new Unauthorized("You are not authorized to do this");
+        }
+
         List<Url> urls = urlService.getAllUrls();
-        return ResponseEntity.status(HttpStatus.OK).body(urls);
+        return ResponseEntity.ok().body(urls);
     }
 
     @GetMapping("/urls/{id}")
-    public ResponseEntity<?> getUrlById(@PathVariable long id){
-
+    public ResponseEntity<?> getUrlById(@PathVariable long id, Authentication authentication){
         log.info("Retreival of url with id = {} has been requested", id);
 
-        Url url = urlService.getUrlById(id);
+        UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
+        if (userPrincipal == null){
+            throw new InexistentUser("You are not logged in");
+        }
 
-        return ResponseEntity.status(HttpStatus.OK).body(url);
+        Url url = urlService.getUrlById(id, userPrincipal.getUser());
+
+        return ResponseEntity.ok().body(url);
+    }
+
+    @PutMapping("/invalidate/{id}")
+    public ResponseEntity<?> invalidateUrl(@PathVariable long id, Authentication authentication){
+        log.info("The {} url is requested to be invalidated", id);
+
+        UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
+        if (userPrincipal == null){
+            throw new InexistentUser("You are not logged in");
+        }
+
+        //TODO: create the invalidation service in UrlService + check if the user owns the url and deactivate it then
+
+
+        return ResponseEntity.ok().body(null);
     }
 }
