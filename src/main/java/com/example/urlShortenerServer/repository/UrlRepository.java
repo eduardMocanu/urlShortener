@@ -20,4 +20,7 @@ public interface UrlRepository extends JpaRepository<Url, Long> {
     List<Url> findAllByUser_Id(Long userId);
 
 
+    Url getUrlById(Long id);
+
+    Url getUrlByIdAndActive(Long id, Boolean active);
 }

@@ -116,6 +116,24 @@ public class UrlService {
     }
 
     @Transactional
+    public void invalidateUrl(long urlId, User user){
+
+        Url url = urlRepository.getUrlByIdAndActive(urlId, true);
+
+        if(url == null){
+            throw new UrlNotFound("The wanted url doesn't exist");
+        }
+
+        if (!Objects.equals(user.getId(), url.getUser().getId())){
+            throw new Unauthorized("You are not authorized to do this");
+        }
+
+        url.setActive(false);
+        url.setExpiration(LocalDateTime.now());
+
+    }
+
+    @Transactional
     @Scheduled(fixedDelay = 60000)
     public void deactivateExpired(){
         log.info("Cleanup job has started");

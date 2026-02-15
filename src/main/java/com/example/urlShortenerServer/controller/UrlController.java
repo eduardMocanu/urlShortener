@@ -4,6 +4,7 @@ package com.example.urlShortenerServer.controller;
 import com.example.urlShortenerServer.domain.Url;
 import com.example.urlShortenerServer.domain.UserPrincipal;
 import com.example.urlShortenerServer.dto.UrlAddedResponse;
+import com.example.urlShortenerServer.dto.UrlDto;
 import com.example.urlShortenerServer.dto.UrlRequest;
 import com.example.urlShortenerServer.enums.UserRole;
 import com.example.urlShortenerServer.exceptions.InexistentUser;
@@ -16,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
@@ -86,8 +88,17 @@ public class UrlController {
         }
 
         Url url = urlService.getUrlById(id, userPrincipal.getUser());
+        UrlDto urlDto = new UrlDto(
+                url.getId(),
+                url.getUrl(),
+                url.getShortUrl(),
+                url.getCreatedAt(),
+                url.getExpiration(),
+                url.getLastAccessed(),
+                url.getClicksCount(),
+                url.getActive());
 
-        return ResponseEntity.ok().body(url);
+        return ResponseEntity.ok().body(urlDto);
     }
 
     @PutMapping("/invalidate/{id}")
@@ -99,9 +110,8 @@ public class UrlController {
             throw new InexistentUser("You are not logged in");
         }
 
-        //TODO: create the invalidation service in UrlService + check if the user owns the url and deactivate it then
+        urlService.invalidateUrl(id, userPrincipal.getUser());
 
-
-        return ResponseEntity.ok().body(null);
+        return ResponseEntity.noContent().build();
     }
 }
