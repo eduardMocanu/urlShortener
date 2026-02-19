@@ -41,7 +41,7 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http){
         http.csrf(customizer -> customizer.disable());
         http.cors(Customizer.withDefaults());
-        http.authorizeHttpRequests(customizer -> customizer.requestMatchers("/register", "/login", "/oauth/**", "/r/*").permitAll().anyRequest().authenticated());
+        http.authorizeHttpRequests(customizer -> customizer.requestMatchers("/register", "/login", "/oauth/**", "/r/**").permitAll().anyRequest().authenticated());
         http.httpBasic(Customizer.withDefaults());
         http.oauth2Login(oauth -> oauth
                 .userInfoEndpoint(userInfo ->

@@ -6,6 +6,7 @@ import com.example.urlShortenerServer.exceptions.*;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,6 +14,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import java.net.URI;
 import java.time.LocalDateTime;
 
 @RestControllerAdvice
@@ -20,32 +22,24 @@ public class ExceptionsGlobalHandler {
     private static final Logger log =
             LoggerFactory.getLogger(ExceptionsGlobalHandler.class);
 
+    @Value("${frontend.url}")
+    private String frontend_url;
+
+
     @ExceptionHandler(UrlExpired.class)
-    public ResponseEntity<?> handleUrlExpiredException(UrlExpired expired, HttpServletRequest request){
-        return ResponseEntity.status(HttpStatus.GONE)
-                .body(
-                        ApiError.builder()
-                                .timeStamp(LocalDateTime.now())
-                                .status(HttpStatus.GONE)
-                                .error(ApiErrors.URL_EXPIRED)
-                                .message("The wanted url is expired")
-                                .path(request.getRequestURI())
-                                .build()
-                );
+    public ResponseEntity<Void> handleUrlExpiredException() {
+        return ResponseEntity
+                .status(HttpStatus.FOUND)
+                .location(URI.create(frontend_url + "/expired"))
+                .build();
     }
 
     @ExceptionHandler(UrlNotFound.class)
-    public ResponseEntity<?> handleUrlNotFoundException(UrlNotFound notFound, HttpServletRequest request){
-        return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(
-                        ApiError.builder()
-                                .timeStamp(LocalDateTime.now())
-                                .status(HttpStatus.NOT_FOUND)
-                                .error(ApiErrors.URL_NOT_FOUND)
-                                .message("The wanted url is not found")
-                                .path(request.getRequestURI())
-                                .build()
-                );
+    public ResponseEntity<Void> handleUrlNotFoundException() {
+        return ResponseEntity
+                .status(HttpStatus.FOUND)
+                .location(URI.create(frontend_url + "/not-found"))
+                .build();
     }
 
     @ExceptionHandler(UsernameExistsAlready.class)
