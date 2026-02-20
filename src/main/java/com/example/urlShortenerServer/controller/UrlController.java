@@ -4,12 +4,13 @@ package com.example.urlShortenerServer.controller;
 import com.example.urlShortenerServer.domain.Url;
 import com.example.urlShortenerServer.domain.UserPrincipal;
 import com.example.urlShortenerServer.dto.UrlAddedResponse;
-import com.example.urlShortenerServer.dto.UrlDto;
+import com.example.urlShortenerServer.dto.UrlResponse;
 import com.example.urlShortenerServer.dto.UrlRequest;
 import com.example.urlShortenerServer.enums.UserRole;
 import com.example.urlShortenerServer.exceptions.InexistentUser;
 import com.example.urlShortenerServer.exceptions.InvalidUrl;
 import com.example.urlShortenerServer.exceptions.Unauthorized;
+import com.example.urlShortenerServer.service.AnalyticsService;
 import com.example.urlShortenerServer.service.UrlService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,7 +18,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
@@ -36,10 +36,21 @@ public class UrlController {
         this.urlService = urlService;
     }
 
+    private AnalyticsService analyticsService;
+    @Autowired
+    public void setAnalyticsService(AnalyticsService analyticsService){
+        this.analyticsService = analyticsService;
+    }
+
     @GetMapping("/r/{code}")
     public ResponseEntity<?> redirectByCode(@PathVariable String code){
         log.info("Redirect request for code = {}", code);
-        String url = urlService.findUrlByCode(code);
+        Url urlObj = urlService.findUrlByCode(code);
+
+        String url = urlObj.getUrl();
+
+        analyticsService.addAnalytic(urlObj);
+
         return ResponseEntity.status(HttpStatus.FOUND).location(URI.create(url)).build();
     }
 
@@ -88,7 +99,7 @@ public class UrlController {
         }
 
         Url url = urlService.getUrlById(id, userPrincipal.getUser());
-        UrlDto urlDto = new UrlDto(
+        UrlResponse urlResponse = new UrlResponse(
                 url.getId(),
                 url.getUrl(),
                 url.getShortUrl(),
@@ -98,7 +109,7 @@ public class UrlController {
                 url.getClicksCount(),
                 url.getActive());
 
-        return ResponseEntity.ok().body(urlDto);
+        return ResponseEntity.ok().body(urlResponse);
     }
 
     @PutMapping("/invalidate/{id}")
@@ -113,5 +124,21 @@ public class UrlController {
         urlService.invalidateUrl(id, userPrincipal.getUser());
 
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/analytics/{id}")
+    public ResponseEntity<?> analyticsUrl(@PathVariable long id, Authentication authentication){
+
+        log.info("The url with id = {} is requested to be analysed", id);
+
+        UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
+        if (userPrincipal == null){
+            throw new InexistentUser("You are not logged in");
+        }
+
+        Url url = urlService.getUrlById(id, userPrincipal.getUser());
+
+        return ResponseEntity.ok().body(analyticsService.getUrlAnalytics(url));
+
     }
 }

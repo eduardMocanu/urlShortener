@@ -3,11 +3,10 @@ package com.example.urlShortenerServer.service;
 
 import com.example.urlShortenerServer.domain.Url;
 import com.example.urlShortenerServer.domain.User;
-import com.example.urlShortenerServer.dto.UrlDto;
+import com.example.urlShortenerServer.dto.UrlResponse;
 import com.example.urlShortenerServer.dto.UserRequest;
 import com.example.urlShortenerServer.dto.UserResponse;
 import com.example.urlShortenerServer.enums.UserRole;
-import com.example.urlShortenerServer.exceptions.InexistentUser;
 import com.example.urlShortenerServer.exceptions.UsernameExistsAlready;
 import com.example.urlShortenerServer.repository.UserRepository;
 import jakarta.transaction.Transactional;
@@ -79,12 +78,12 @@ public class UserService {
         return user;
     }
 
-    public List<UrlDto> getAllUrlsOfUser(Long userId){
+    public List<UrlResponse> getAllUrlsOfUser(Long userId){
 
 
         List<Url> urls = urlService.getUrlByUserId(userId);
-        List<UrlDto> urlDtos = urls.stream()
-                .map(u -> new UrlDto(
+        List<UrlResponse> urlResponses = urls.stream()
+                .map(u -> new UrlResponse(
                         u.getId(),
                         u.getUrl(),
                         u.getShortUrl(),
@@ -95,7 +94,7 @@ public class UserService {
                         u.getActive()
                 ))
                 .toList();
-        return urlDtos;
+        return urlResponses;
     }
 
     public User getUserByUsername(String username){

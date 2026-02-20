@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 @Builder
 @AllArgsConstructor
 @Getter
-public class UrlDto {
+public class UrlResponse {
     private Long id;
     private String url;
     private String shortUrl;

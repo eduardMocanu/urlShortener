@@ -8,6 +8,7 @@ import com.example.urlShortenerServer.exceptions.InexistentUser;
 import com.example.urlShortenerServer.exceptions.Unauthorized;
 import com.example.urlShortenerServer.exceptions.UrlExpired;
 import com.example.urlShortenerServer.exceptions.UrlNotFound;
+import com.example.urlShortenerServer.repository.AnalyticsRepository;
 import com.example.urlShortenerServer.repository.UrlRepository;
 import com.example.urlShortenerServer.repository.UserRepository;
 import jakarta.transaction.Transactional;
@@ -33,16 +34,10 @@ public class UrlService {
             LoggerFactory.getLogger(UrlService.class);
 
     private UrlRepository urlRepository;
-    private UserRepository userRepository;
     @Autowired
     public void setRepository(UrlRepository repository) {
         this.urlRepository = repository;
     }
-    @Autowired
-    public void setUserRepository(UserRepository repository){
-        this.userRepository = repository;
-    }
-
 
     private String randomCodeGenerator(){
         UUID uuid = UUID.randomUUID();
@@ -53,7 +48,7 @@ public class UrlService {
     }
 
     @Transactional//allows dirty checking, if I change the returned object after the db query, the db is updated as well
-    public String findUrlByCode(String code) throws UrlExpired, UrlNotFound{
+    public Url findUrlByCode(String code) throws UrlExpired, UrlNotFound{
         Url url = urlRepository.findByShortUrl(code).orElseThrow(() -> {
             log.warn("The wanted url for the code = {} is not found", code);
             return new UrlNotFound("There is no url found in the database by that code");
@@ -64,10 +59,9 @@ public class UrlService {
             log.warn("The wanted url = {} has expired", url.getUrl());
             throw new UrlExpired("The url for this code is expired");
         }
-        String fullUrl = url.getUrl();
         url.setLastAccessed(LocalDateTime.now());
         url.setClicksCount(url.getClicksCount() + 1);
-        return fullUrl;
+        return url;
     }
 
     @Transactional
