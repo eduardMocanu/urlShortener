@@ -33,6 +33,8 @@ public class UserService {
     @Autowired
     private UrlService urlService;
 
+    private static final int MAX_EXTENSIONS = 5;
+
     BCryptPasswordEncoder encoder = new BCryptPasswordEncoder(12);
 
 
@@ -91,7 +93,9 @@ public class UserService {
                         u.getExpiration(),
                         u.getLastAccessed(),
                         u.getClicksCount(),
-                        u.getActive()
+                        u.getActive(),
+                        u.getExtensions(),
+                        MAX_EXTENSIONS
                 ))
                 .toList();
         return urlResponses;

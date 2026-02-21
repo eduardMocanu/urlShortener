@@ -18,4 +18,6 @@ public class UrlResponse {
     private LocalDateTime lastAccessed;
     private Long clicksCount;
     private Boolean active;
+    private Integer extensions;
+    private Integer maximumExtensions = 5;
 }

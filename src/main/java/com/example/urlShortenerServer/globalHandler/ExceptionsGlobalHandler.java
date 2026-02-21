@@ -27,7 +27,7 @@ public class ExceptionsGlobalHandler {
 
 
     @ExceptionHandler(UrlExpired.class)
-    public ResponseEntity<Void> handleUrlExpiredException() {
+    public ResponseEntity<?> handleUrlExpiredException() {
         return ResponseEntity
                 .status(HttpStatus.FOUND)
                 .location(URI.create(frontend_url + "/expired"))
@@ -35,7 +35,7 @@ public class ExceptionsGlobalHandler {
     }
 
     @ExceptionHandler(UrlNotFound.class)
-    public ResponseEntity<Void> handleUrlNotFoundException() {
+    public ResponseEntity<?> handleUrlNotFoundException() {
         return ResponseEntity
                 .status(HttpStatus.FOUND)
                 .location(URI.create(frontend_url + "/not-found"))
@@ -43,26 +43,26 @@ public class ExceptionsGlobalHandler {
     }
 
     @ExceptionHandler(UsernameExistsAlready.class)
-    public ResponseEntity<?> handleUsernameExistsAlready(UsernameExistsAlready usernameExistsAlready, HttpServletRequest request){
+    public ResponseEntity<?> handleUsernameExistsAlready(UsernameExistsAlready ex, HttpServletRequest request){
         return ResponseEntity.status(HttpStatus.CONFLICT).body(
                 ApiError.builder()
                         .timeStamp(LocalDateTime.now())
                         .status(HttpStatus.CONFLICT)
                         .error(ApiErrors.USERNAME_EXISTS_ALREADY)
-                        .message("The given username already exists in the db")
+                        .message(ex.getMessage())
                         .path(request.getRequestURI())
                         .build()
         );
     }
 
     @ExceptionHandler(Unauthorized.class)
-    public ResponseEntity<?> handleUnauthorized(Unauthorized unauthorized, HttpServletRequest request){
+    public ResponseEntity<?> handleUnauthorized(Unauthorized ex, HttpServletRequest request){
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(
                 ApiError.builder()
                         .timeStamp(LocalDateTime.now())
                         .status(HttpStatus.UNAUTHORIZED)
                         .error(ApiErrors.UNAUTHORIZED)
-                        .message("You are not authorized to do this")
+                        .message(ex.getMessage())
                         .path(request.getRequestURI())
                         .build()
         );
@@ -72,7 +72,7 @@ public class ExceptionsGlobalHandler {
     public ResponseEntity<?> handleConstraintViolation(DataIntegrityViolationException ex) {
         return ResponseEntity
                 .status(HttpStatus.CONFLICT)
-                .body("Tried to input duplicate values on an unique column");
+                .body(ex.getMessage());
     }
 
     @ExceptionHandler(exception = UsernameNotFoundException.class)
@@ -82,7 +82,7 @@ public class ExceptionsGlobalHandler {
                         .timeStamp(LocalDateTime.now())
                         .status(HttpStatus.NOT_FOUND)
                         .error(ApiErrors.INEXISTENT_USER)
-                        .message("The credentials for the wanted user are not in the db")
+                        .message(ex.getMessage())
                         .path(request.getRequestURI())
                         .build()
         );
@@ -95,7 +95,7 @@ public class ExceptionsGlobalHandler {
                         .timeStamp(LocalDateTime.now())
                         .status(HttpStatus.NOT_FOUND)
                         .error(ApiErrors.INEXISTENT_USER)
-                        .message("The credentials for the wanted user are not in the db")
+                        .message(ex.getMessage())
                         .path(request.getRequestURI())
                         .build()
         );
@@ -108,7 +108,20 @@ public class ExceptionsGlobalHandler {
                         .timeStamp(LocalDateTime.now())
                         .status(HttpStatus.BAD_REQUEST)
                         .error(ApiErrors.INVALID_URL)
-                        .message("The given url is invalid")
+                        .message(ex.getMessage())
+                        .path(request.getRequestURI())
+                        .build()
+        );
+    }
+
+    @ExceptionHandler(exception = InvalidData.class)
+    public ResponseEntity<?> handleInvalidData(InvalidData ex, HttpServletRequest request){
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+                ApiError.builder()
+                        .timeStamp(LocalDateTime.now())
+                        .status(HttpStatus.BAD_REQUEST)
+                        .error(ApiErrors.INVALID_DATA)
+                        .message(ex.getMessage())
                         .path(request.getRequestURI())
                         .build()
         );

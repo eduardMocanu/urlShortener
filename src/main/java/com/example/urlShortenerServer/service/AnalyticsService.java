@@ -18,6 +18,7 @@ import java.util.List;
 public class AnalyticsService {
 
     private AnalyticsRepository analyticsRepository;
+    private static final int MAX_EXTENSIONS = 5;
 
     @Autowired
     public void setAnalyticsRepository(AnalyticsRepository analyticsRepository){
@@ -47,7 +48,9 @@ public class AnalyticsService {
                 url.getExpiration(),
                 url.getLastAccessed(),
                 url.getClicksCount(),
-                url.getActive());
+                url.getActive(),
+                url.getExtensions(),
+                MAX_EXTENSIONS);
 
         return new UrlAnalyticsChart(urlResponse, dailyClicksList);
     }

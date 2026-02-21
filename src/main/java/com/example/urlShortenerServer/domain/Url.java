@@ -42,4 +42,7 @@ public class Url {
 
     @Column(nullable = false)
     private Boolean active;
+
+    @Column(nullable = false)
+    private Integer extensions = 0;
 }

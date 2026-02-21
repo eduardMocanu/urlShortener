@@ -3,11 +3,10 @@ package com.example.urlShortenerServer.controller;
 
 import com.example.urlShortenerServer.domain.Url;
 import com.example.urlShortenerServer.domain.UserPrincipal;
-import com.example.urlShortenerServer.dto.UrlAddedResponse;
-import com.example.urlShortenerServer.dto.UrlResponse;
-import com.example.urlShortenerServer.dto.UrlRequest;
+import com.example.urlShortenerServer.dto.*;
 import com.example.urlShortenerServer.enums.UserRole;
 import com.example.urlShortenerServer.exceptions.InexistentUser;
+import com.example.urlShortenerServer.exceptions.InvalidData;
 import com.example.urlShortenerServer.exceptions.InvalidUrl;
 import com.example.urlShortenerServer.exceptions.Unauthorized;
 import com.example.urlShortenerServer.service.AnalyticsService;
@@ -42,6 +41,8 @@ public class UrlController {
         this.analyticsService = analyticsService;
     }
 
+    private static final int MAX_EXTENSIONS = 5;
+
     @GetMapping("/r/{code}")
     public ResponseEntity<?> redirectByCode(@PathVariable String code){
         log.info("Redirect request for code = {}", code);
@@ -73,21 +74,21 @@ public class UrlController {
         }
     }
 
-    @GetMapping("/urls")
-    public ResponseEntity<?> getAllUrls(Authentication authentication){
-        log.info("Retreival for all urls has been requested");
-
-        UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
-        if (userPrincipal == null){
-            throw new InexistentUser("You are not logged in");
-        }
-        if (userPrincipal.getUser().getRole() != UserRole.ADMIN){
-            throw new Unauthorized("You are not authorized to do this");
-        }
-
-        List<Url> urls = urlService.getAllUrls();
-        return ResponseEntity.ok().body(urls);
-    }
+//    @GetMapping("/urls")
+//    public ResponseEntity<?> getAllUrls(Authentication authentication){
+//        log.info("Retreival for all urls has been requested");
+//
+//        UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
+//        if (userPrincipal == null){
+//            throw new InexistentUser("You are not logged in");
+//        }
+//        if (userPrincipal.getUser().getRole() != UserRole.ADMIN){
+//            throw new Unauthorized("You are not authorized to do this");
+//        }
+//
+//        List<Url> urls = urlService.getAllUrls();
+//        return ResponseEntity.ok().body(urls);
+//    }
 
     @GetMapping("/urls/{id}")
     public ResponseEntity<?> getUrlById(@PathVariable long id, Authentication authentication){
@@ -107,7 +108,9 @@ public class UrlController {
                 url.getExpiration(),
                 url.getLastAccessed(),
                 url.getClicksCount(),
-                url.getActive());
+                url.getActive(),
+                url.getExtensions(),
+                MAX_EXTENSIONS);
 
         return ResponseEntity.ok().body(urlResponse);
     }
@@ -139,6 +142,30 @@ public class UrlController {
         Url url = urlService.getUrlById(id, userPrincipal.getUser());
 
         return ResponseEntity.ok().body(analyticsService.getUrlAnalytics(url));
+    }
 
+    @PutMapping("/url/{id}/extend")
+    public ResponseEntity<?> extendUrl(@PathVariable long id, Authentication authentication, @RequestBody ExtensionDto extensionDto){
+        log.info("An extension for the url with id = {} was requested", id);
+        Integer days = extensionDto.getDays();
+        UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
+        if (userPrincipal == null){
+            throw new InexistentUser("You are not logged in");
+        }
+
+        if (days <= 0){
+            throw new InvalidData("The provided data is invalid");
+        }
+
+        Url url = urlService.extendUrl(id, userPrincipal.getUser(), days);
+
+        UrlExtensionDto urlResponse = UrlExtensionDto.builder()
+                .expiration(url.getExpiration())
+                .id(url.getId())
+                .extensions(url.getExtensions())
+                .maximumExtensions(MAX_EXTENSIONS)
+                .build();
+
+        return ResponseEntity.ok().body(urlResponse);
     }
 }

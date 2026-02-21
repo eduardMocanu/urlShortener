@@ -89,6 +89,7 @@ public class UrlService {
                 .clicksCount(0L)
                 .active(true)
                 .user(user)
+                .extensions(0)
                 .build();
         urlRepository.save(url);
         return randomCode;
@@ -124,7 +125,25 @@ public class UrlService {
 
         url.setActive(false);
         url.setExpiration(LocalDateTime.now());
+    }
 
+    @Transactional
+    public Url extendUrl(long id, User user, int days){
+
+        Optional<Url> url = urlRepository.findById(id);
+        Url exactUrl = url.orElseThrow(() -> new UrlNotFound("The wanted url is not found"));
+
+        if (!Objects.equals(exactUrl.getUser().getId(), user.getId())){
+            throw new Unauthorized("You are not authorized to do this");
+        }
+
+        if (exactUrl.getExtensions() > 5){
+            throw new Unauthorized("You can't extend the url more times");
+        }
+
+        exactUrl.setExpiration(exactUrl.getExpiration().plusDays(days));
+        exactUrl.setExtensions(exactUrl.getExtensions() + 1);
+        return exactUrl;
     }
 
     @Transactional
