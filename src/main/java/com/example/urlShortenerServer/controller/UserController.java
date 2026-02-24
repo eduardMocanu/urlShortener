@@ -11,7 +11,9 @@ import com.example.urlShortenerServer.service.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -64,7 +66,16 @@ public class UserController {
                 )
         );
         String token = jwtService.generateToken(userRequest.getUsername());
-        return ResponseEntity.status(HttpStatus.OK).body(Map.of("token", token));
+        ResponseCookie responseCookie = ResponseCookie.from("access_token", token)
+                .httpOnly(true)
+//                .secure(true)
+                .sameSite("Lax")
+                .path("/")
+                .maxAge(60 * 60)
+                .build();
+
+        return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE, responseCookie.toString()).build();
+
     }
 
     @GetMapping("/oauth/success")
