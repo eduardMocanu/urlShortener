@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@CrossOrigin(origins = "http://localhost:5173")
+//@CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true")
 public class UserController {
     private static final Logger log =
             LoggerFactory.getLogger(UserController.class);
@@ -89,7 +89,15 @@ public class UserController {
         String email = user.getAttribute("email");
         String token = jwtService.generateToken(email);
         //TO DO: redirect to the frontend page
-        return ResponseEntity.status(HttpStatus.OK).body(Map.of("token", token));
+        ResponseCookie responseCookie = ResponseCookie.from("access_token", token)
+                .httpOnly(true)
+//                .secure(true)
+                .sameSite("Lax")
+                .path("/")
+                .maxAge(60 * 60)
+                .build();
+
+        return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE, responseCookie.toString()).build();
     }
 
 
@@ -103,5 +111,33 @@ public class UserController {
         Long userId = userPrincipal.getUser().getId();
         List<UrlResponse> urlsDto = userService.getAllUrlsOfUser(userId);
         return ResponseEntity.ok(urlsDto);
+    }
+
+    @GetMapping("/auth/me")
+    public ResponseEntity<?> checkLoggedIn(Authentication authentication){
+        log.info("The request to make sure that the cookie is valid has been made");
+
+        UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
+        if (userPrincipal == null){
+            throw new InexistentUser("The wanted user is not logged in");
+        }
+
+        return ResponseEntity.ok(Map.of("Code", "200"));
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout() {
+
+        ResponseCookie cookie = ResponseCookie.from("access_token", "")
+                .httpOnly(true)
+                //.secure(true)
+                .sameSite("Lax")
+                .path("/")
+                .maxAge(0)   // delete
+                .build();
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                .build();
     }
 }

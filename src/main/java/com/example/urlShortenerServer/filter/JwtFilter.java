@@ -4,6 +4,7 @@ import com.example.urlShortenerServer.service.JwtService;
 import com.example.urlShortenerServer.service.MyUserDetailsService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,15 +33,30 @@ public class JwtFilter extends OncePerRequestFilter {
             FilterChain filterChain
     ) throws ServletException, IOException {
 
-        String authHeader = request.getHeader("Authorization");
+//        String authHeader = request.getHeader("Authorization");
+//
+//        // No token -> continue
+//        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+//            filterChain.doFilter(request, response);
+//            return;
+//        }
+//
+//        String token = authHeader.substring(7);
 
-        // No token -> continue
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            filterChain.doFilter(request, response);
+        Cookie[] cookies = request.getCookies();
+
+        String token = "";
+
+        if (cookies.length == 0){
             return;
         }
 
-        String token = authHeader.substring(7);
+        for (var i:cookies){
+            if ("access_token".equals(i.getName())){
+                token = i.getValue();
+            }
+        }
+
 
         // Safe username extraction (returns null if expired/invalid)
         String username = jwtService.extractUsernameSafe(token);
