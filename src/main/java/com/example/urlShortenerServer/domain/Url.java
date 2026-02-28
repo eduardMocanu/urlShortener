@@ -11,7 +11,6 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @NoArgsConstructor
-@Builder
 @AllArgsConstructor
 public class Url {
     @Id

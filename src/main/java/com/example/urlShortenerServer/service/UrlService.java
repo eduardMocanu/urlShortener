@@ -79,18 +79,16 @@ public class UrlService {
 
         User user = principal.getUser();
 
-        Url url = Url.builder()
-                .url(urlAddress)
-                .shortUrl(randomCode)
-                .createdAt(LocalDateTime.now())
-//                .expiration(LocalDateTime.now().plusMinutes(1))
-                .expiration(LocalDateTime.now().plusDays(2))
-                .lastAccessed(LocalDateTime.now())
-                .clicksCount(0L)
-                .active(true)
-                .user(user)
-                .extensions(0)
-                .build();
+        Url url = new Url();
+        url.setUrl(urlAddress);
+        url.setShortUrl(randomCode);
+        url.setCreatedAt(LocalDateTime.now());
+        url.setExpiration(LocalDateTime.now().plusDays(2));
+        url.setLastAccessed(LocalDateTime.now());
+        url.setClicksCount(0L);
+        url.setActive(true);
+        url.setUser(user);
+        url.setExtensions(0);
         urlRepository.save(url);
         return randomCode;
     }
