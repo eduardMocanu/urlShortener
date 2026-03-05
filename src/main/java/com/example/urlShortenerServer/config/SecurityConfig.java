@@ -4,6 +4,7 @@ import com.example.urlShortenerServer.filter.JwtFilter;
 import com.example.urlShortenerServer.service.MyOAuth2UserService;
 import com.example.urlShortenerServer.service.MyUserDetailsService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -27,6 +28,9 @@ import java.util.List;
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
+
+    @Value("${frontend.url}")
+    private String frontend_url;
 
     @Autowired
     private JwtFilter jwtFilter;
@@ -77,7 +81,7 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowCredentials(true);
-        config.setAllowedOrigins(List.of("http://localhost:5173")); // your React URL
+        config.setAllowedOrigins(List.of(frontend_url));
         config.setAllowedMethods(List.of("GET","POST","PUT","DELETE","OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
 

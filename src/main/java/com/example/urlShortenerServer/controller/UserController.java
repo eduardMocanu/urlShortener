@@ -11,6 +11,7 @@ import com.example.urlShortenerServer.service.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
@@ -21,14 +22,17 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.*;
 
+import java.net.URI;
 import java.util.List;
 import java.util.Map;
 
 @RestController
-//@CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true")
 public class UserController {
     private static final Logger log =
             LoggerFactory.getLogger(UserController.class);
+
+    @Value("${frontend.url}")
+    private String frontend_url;
 
     private UserService userService;
     private AuthenticationManager authenticationManager;
@@ -68,7 +72,7 @@ public class UserController {
         String token = jwtService.generateToken(userRequest.getUsername());
         ResponseCookie responseCookie = ResponseCookie.from("access_token", token)
                 .httpOnly(true)
-//                .secure(true)
+                .secure(true)
                 .sameSite("Lax")
                 .path("/")
                 .maxAge(60 * 60)
@@ -88,16 +92,19 @@ public class UserController {
         }
         String email = user.getAttribute("email");
         String token = jwtService.generateToken(email);
-        //TO DO: redirect to the frontend page
         ResponseCookie responseCookie = ResponseCookie.from("access_token", token)
                 .httpOnly(true)
-//                .secure(true)
+                .secure(true)
                 .sameSite("Lax")
                 .path("/")
                 .maxAge(60 * 60)
                 .build();
 
-        return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE, responseCookie.toString()).build();
+        return ResponseEntity
+                .status(HttpStatus.FOUND)
+                .header(HttpHeaders.SET_COOKIE, responseCookie.toString())
+                .header(HttpHeaders.LOCATION, frontend_url)
+                .build();
     }
 
 
@@ -130,7 +137,7 @@ public class UserController {
 
         ResponseCookie cookie = ResponseCookie.from("access_token", "")
                 .httpOnly(true)
-                //.secure(true)
+                .secure(true)
                 .sameSite("Lax")
                 .path("/")
                 .maxAge(0)   // delete
