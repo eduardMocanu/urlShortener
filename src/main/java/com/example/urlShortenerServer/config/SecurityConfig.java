@@ -23,6 +23,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import jakarta.servlet.http.HttpServletResponse;
 import java.util.List;
 
 @Configuration
@@ -50,8 +51,12 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http){
         http.csrf(customizer -> customizer.disable());
         http.cors(Customizer.withDefaults());
-        http.authorizeHttpRequests(customizer -> customizer.requestMatchers("/register", "/login", "/oauth/**", "/r/**").permitAll().anyRequest().authenticated());
-        http.httpBasic(Customizer.withDefaults());
+        http.authorizeHttpRequests(customizer -> customizer.requestMatchers("/register", "/login", "/logout", "/oauth/**", "/r/**").permitAll().anyRequest().authenticated());
+        http.exceptionHandling(ex -> ex
+                .authenticationEntryPoint((request, response, authException) -> {
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                })
+        );
         http.oauth2Login(oauth -> oauth
                 .userInfoEndpoint(userInfo ->
                         userInfo.userService(myOAuth2UserService)
@@ -59,6 +64,7 @@ public class SecurityConfig {
                 .defaultSuccessUrl("/oauth/success", true)
         );
         http.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED));
+        http.logout(logout -> logout.disable());
         http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }

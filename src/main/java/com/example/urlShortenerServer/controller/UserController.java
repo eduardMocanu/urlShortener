@@ -34,6 +34,9 @@ public class UserController {
     @Value("${frontend.url}")
     private String frontend_url;
 
+    @Value("${cookie.domain}")
+    private String cookieDomain;
+
     private UserService userService;
     private AuthenticationManager authenticationManager;
     @Autowired
@@ -75,6 +78,7 @@ public class UserController {
                 .secure(true)
                 .sameSite("Lax")
                 .path("/")
+                .domain(cookieDomain)
                 .maxAge(60 * 60)
                 .build();
 
@@ -97,6 +101,7 @@ public class UserController {
                 .secure(true)
                 .sameSite("Lax")
                 .path("/")
+                .domain(cookieDomain)
                 .maxAge(60 * 60)
                 .build();
 
@@ -133,18 +138,44 @@ public class UserController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<?> logout() {
+    public ResponseEntity<?> logout(jakarta.servlet.http.HttpServletRequest request,
+                                    jakarta.servlet.http.HttpServletResponse response) {
 
+        jakarta.servlet.http.HttpSession session = request.getSession(false);
+        if (session != null) {
+            session.invalidate();
+        }
+
+        // Clear with domain (current format)
         ResponseCookie cookie = ResponseCookie.from("access_token", "")
                 .httpOnly(true)
                 .secure(true)
                 .sameSite("Lax")
                 .path("/")
-                .maxAge(0)   // delete
+                .domain(cookieDomain)
+                .maxAge(0)
                 .build();
+        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
 
-        return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, cookie.toString())
+        // Clear without domain (legacy cookies set before domain was added)
+        ResponseCookie cookieNoDomain = ResponseCookie.from("access_token", "")
+                .httpOnly(true)
+                .secure(true)
+                .sameSite("Lax")
+                .path("/")
+                .maxAge(0)
                 .build();
+        response.addHeader(HttpHeaders.SET_COOKIE, cookieNoDomain.toString());
+
+        // Clear JSESSIONID
+        ResponseCookie jsessionCookie = ResponseCookie.from("JSESSIONID", "")
+                .httpOnly(true)
+                .secure(true)
+                .path("/")
+                .maxAge(0)
+                .build();
+        response.addHeader(HttpHeaders.SET_COOKIE, jsessionCookie.toString());
+
+        return ResponseEntity.ok().build();
     }
 }
