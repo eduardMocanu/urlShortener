@@ -2,6 +2,7 @@ package com.example.urlShortenerServer.config;
 
 import com.example.urlShortenerServer.filter.JwtFilter;
 import com.example.urlShortenerServer.service.MyOAuth2UserService;
+import com.example.urlShortenerServer.service.MyOidcUserService;
 import com.example.urlShortenerServer.service.MyUserDetailsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -48,7 +49,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http){
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, MyOidcUserService myOidcUserService){
         http.csrf(customizer -> customizer.disable());
         http.cors(Customizer.withDefaults());
         http.authorizeHttpRequests(customizer -> customizer.requestMatchers("/register", "/login", "/logout", "/oauth/**", "/r/**").permitAll().anyRequest().authenticated());
@@ -60,6 +61,7 @@ public class SecurityConfig {
         http.oauth2Login(oauth -> oauth
                 .userInfoEndpoint(userInfo ->
                         userInfo.userService(myOAuth2UserService)
+                                .oidcUserService(myOidcUserService)
                 )
                 .defaultSuccessUrl("/oauth/success", true)
         );

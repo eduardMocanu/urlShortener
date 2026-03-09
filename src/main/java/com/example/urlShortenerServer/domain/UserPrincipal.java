@@ -5,17 +5,22 @@ import org.jspecify.annotations.Nullable;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserService;
+import org.springframework.security.oauth2.core.oidc.OidcIdToken;
+import org.springframework.security.oauth2.core.oidc.OidcUserInfo;
+import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-public class UserPrincipal implements UserDetails, OAuth2User {
+public class UserPrincipal implements UserDetails, OAuth2User, OidcUser {
 
     @Getter
     private User user;
     private Map<String, Object> attributes;
+    private OidcUser oidcUser;
 
     //constructor for the username + password authentication
     public UserPrincipal(User user){
@@ -66,4 +71,20 @@ public class UserPrincipal implements UserDetails, OAuth2User {
     @Override public boolean isAccountNonLocked() { return true; }
     @Override public boolean isCredentialsNonExpired() { return true; }
     @Override public boolean isEnabled() { return true; }
+
+    @Override
+    public Map<String, Object> getClaims() {
+        return oidcUser.getClaims();
+    }
+
+    @Override
+    public OidcUserInfo getUserInfo() {
+        return oidcUser.getUserInfo();
+    }
+
+    @Override
+    public OidcIdToken getIdToken() {
+        return oidcUser.getIdToken();
+    }
+
 }
